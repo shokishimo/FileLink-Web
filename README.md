@@ -11,5 +11,5 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 
 You can start editing the page by modifying `src/pages/index.tsx`. The page auto-updates as you edit the file.
 
-## Deploy on Amplify
+## Auto Deployment on Amplify
 https://main.d2kfr2dxvjhly7.amplifyapp.com/
