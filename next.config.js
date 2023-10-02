@@ -22,7 +22,7 @@ module.exports = {
       {
         source: "/:path*",
         destination:
-          "https://c17074xlzc.execute-api.us-east-2.amazonaws.com/prod/" // Proxy to Backend
+          "https://c17074xlzc.execute-api.us-east-2.amazonaws.com/prod/:path*" // Proxy to Backend
       },
     ];
   },

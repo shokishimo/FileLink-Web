@@ -3,9 +3,9 @@ import { Url } from "../features/url.type";
 
 export const baseApi = api.injectEndpoints({
   endpoints: (build) => ({
-    getUrl: build.query<Url, void>({
+    getUrl: build.query<Url["url_key"], void>({
       query: () => "createNewUrl",
-      transformResponse: (resp: { url: Url }) => resp.url,
+      transformResponse: (resp: { url_key: Url["url_key"] }) => resp.url_key,
       providesTags: ["BaseApi"],
     }),
   }),
