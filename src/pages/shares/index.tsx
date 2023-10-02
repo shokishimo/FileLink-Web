@@ -1,14 +1,14 @@
 import type { NextPage } from "next";
 import * as React from "react";
-import { Stack, Typography, Button } from "@mui/material";
+import { Stack, Typography } from "@mui/material";
 import Head from "next/head";
 
-const Home: NextPage = () => {
+const SharesHome: NextPage = () => {
 
   return (
     <>
       <Head>
-        <title>FileLink Share</title>
+        <title>FileLink Shares Home</title>
       </Head>
       <Stack
         direction="column" 
@@ -17,10 +17,10 @@ const Home: NextPage = () => {
         sx={{ minHeight: "100vh" }}
         spacing={5}
       >
-        <Typography variant="h3">Share Page</Typography>
+        <Typography variant="h3">Shares Home</Typography>
       </Stack>
     </>
   );
 };
 
-export default Home;
+export default SharesHome;
