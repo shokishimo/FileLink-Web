@@ -10,4 +10,4 @@ First, run the development server:
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
 ## Auto Deployment on Amplify
-https://main.dygajf4c355rr.amplifyapp.com/
+https://main.d4496s88jssjn.amplifyapp.com/
