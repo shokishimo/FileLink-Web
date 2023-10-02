@@ -12,7 +12,7 @@ const Home: NextPage = () => {
 
   const handleSubmit = React.useCallback(() => {
     if (data) {
-      router.push(`/share/${data}`);
+      router.push(`shares/${data}`);
     }
   }, [data, router]);
 

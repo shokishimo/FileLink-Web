@@ -4,7 +4,6 @@ import { Stack, Typography } from "@mui/material";
 import Head from "next/head";
 
 const SharesHome: NextPage = () => {
-
   return (
     <>
       <Head>
