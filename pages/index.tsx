@@ -1,9 +1,9 @@
 import type { NextPage } from "next";
 import * as React from "react";
 import { Stack, Typography, Button, LinearProgress } from "@mui/material";
-import { APIErrorAlert } from "../components/APIErrorAlert";
+import { APIErrorAlert } from "../src/components/APIErrorAlert";
 import Head from "next/head";
-import { useGetUrlQuery } from "../services/base";
+import { useGetUrlQuery  } from "../src/services/base";
 import { useRouter } from "next/router";
 
 const Home: NextPage = () => {
