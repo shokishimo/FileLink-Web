@@ -3,7 +3,7 @@ module.exports = {
     return [
       {
         // API向けのCORS設定, ローカルデバッグ用
-        source: "/:path*",
+        source: "/api/:path*",
         headers: [
           {
             key: "Access-Control-Allow-Origin",
@@ -20,9 +20,9 @@ module.exports = {
   async rewrites() {
     return [
       {
-        source: "/:path*",
+        source: "/api/:path*",
         destination:
-          "https://c17074xlzc.execute-api.us-east-2.amazonaws.com/prod/:path*" // Proxy to Backend
+          "https://c17074xlzc.execute-api.us-east-2.amazonaws.com/prod/api/:path*" // Proxy to Backend
       },
     ];
   },

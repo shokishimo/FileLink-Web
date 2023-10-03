@@ -8,6 +8,7 @@ export const baseApi = api.injectEndpoints({
       transformResponse: (resp: { url_key: Url["url_key"] }) => resp.url_key,
       providesTags: ["BaseApi"],
     }),
+
   }),
 });
 

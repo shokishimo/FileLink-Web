@@ -3,7 +3,7 @@ import { createApi, fetchBaseQuery, retry } from "@reduxjs/toolkit/query/react";
 const apiURL = process.env.NEXT_PUBLIC_API_URL ?? "";
 // Create our baseQuery instance
 const baseQuery = fetchBaseQuery({
-  baseUrl: `${apiURL}`,
+  baseUrl: `${apiURL}/api`,
   // NOTE: Quoted from https://redux-toolkit.js.org/rtk-query/usage/examples
   // TODO: Use token as auth header
   // prepareHeaders: (headers, { getState }) => {

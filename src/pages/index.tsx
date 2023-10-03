@@ -4,22 +4,15 @@ import { Stack, Typography, Button, LinearProgress } from "@mui/material";
 import { APIErrorAlert } from "../components/APIErrorAlert";
 import Head from "next/head";
 import { useGetUrlQuery } from "../services/base";
-import { useRouter } from "next/router";
+import Link from "next/link";
 
 const Home: NextPage = () => {
   const { data, isLoading, isError, error } = useGetUrlQuery();
-  const router = useRouter();
-
-  const handleSubmit = React.useCallback(() => {
-    if (data) {
-      router.push(`shares/${data}`);
-    }
-  }, [data, router]);
 
   if (isLoading) {
     return <LinearProgress />;
   }
-  if (isError) {
+  if (isError || !data) {
     return <APIErrorAlert error={error} />;
   }
 
@@ -36,7 +29,9 @@ const Home: NextPage = () => {
         spacing={5}
       >
         <Typography variant="h3">FileLink</Typography>
-        <Button size="large" variant="contained" onClick={handleSubmit}>Start</Button>
+        <Link href={`/shares/${data}`}>
+          <Button size="large" variant="contained">Start</Button>
+        </Link>
       </Stack>
     </>
   );
