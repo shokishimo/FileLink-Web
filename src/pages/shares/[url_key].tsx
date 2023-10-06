@@ -1,15 +1,22 @@
 import type { NextPage } from "next";
 import * as React from "react";
-import { Stack, Typography, List, ListItem, Button } from "@mui/material";
+import { Stack, Typography, List, ListItem, Button, LinearProgress } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import FolderZipIcon from "@mui/icons-material/FolderZipTwoTone";
 import FolderUploadIcon from "@mui/icons-material/DriveFolderUploadTwoTone";
 import Head from "next/head";
+import { useRouter } from "next/router";
 import {useDropzone} from "react-dropzone";
 import { useState, useCallback, useMemo } from "react";
 import { v4 as uuid } from "uuid";
+import { useUploadZipFilesMutation } from "@/services/base";
+import { APIErrorAlert } from "@/components/APIErrorAlert";
 
 const SharesUrlKey: NextPage = () => {
+  const router = useRouter();
+  const urlKey = router.query.url_key as string;
+  const [postZipFiles, { data, isLoading: isPosting, error, isSuccess, isError }] 
+    = useUploadZipFilesMutation();
   const [filesMap, setFilesMap] = useState(new Map<string, File>());
 
   const addFiles = useCallback((newFiles: File[]) => {
@@ -44,8 +51,35 @@ const SharesUrlKey: NextPage = () => {
   });
 
   const uploadFiles = useCallback(() => {
-    return
+    const formData = new FormData();
+    filesMap.forEach((file, key, map) => {
+      formData.append(key, file);
+    });
+    
+    // HTTP Post
+    postZipFiles({
+      urlKey: urlKey,
+      formData: formData,
+    });
   }, []);
+
+  if (isPosting) {
+    return <LinearProgress />;
+  }
+  if (isError) {
+    return <APIErrorAlert error={error}/>
+  }
+  if (isSuccess) {
+    if (data) {
+      return (
+        <>
+          <Typography>Uploaded successfully</Typography>
+          <Typography>${data}</Typography>
+        </>
+      )
+    }
+    console.warn("No data is returned");
+  }
 
   return (
     <>
