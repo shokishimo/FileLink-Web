@@ -23,14 +23,15 @@ const SharesUrlKey: NextPage = () => {
     setFilesMap((preMap) => {
       const newMap = new Map(preMap);
       newFiles.forEach(file => {
-        const ext = file.name.split(".").pop()?.toLowerCase();
-        if (ext === "zip") {
-          newMap.set(uuid(), file);
-        }
+        newMap.set(uuid(), file);
+        // const ext = file.name.split(".").pop()?.toLowerCase();
+        // if (ext === "zip") {
+        //   newMap.set(uuid(), file);
+        // }
       });
       return newMap;
     });
-  }, []);
+  }, [filesMap]);
 
   const removeFile = useCallback((uuidKey: string) => {
     setFilesMap((prevMap) => {
@@ -38,7 +39,7 @@ const SharesUrlKey: NextPage = () => {
       newMap.delete(uuidKey);
       return newMap;
     });
-  }, []);
+  }, [filesMap]);
 
   const filesList = useMemo(() => Array.from(filesMap.keys()), [filesMap]);
 
@@ -53,7 +54,7 @@ const SharesUrlKey: NextPage = () => {
   const uploadFiles = useCallback(() => {
     const formData = new FormData();
     filesMap.forEach((file, key, map) => {
-      formData.append(key, file);
+      formData.append("zip-file", file, file.name);
     });
     
     // HTTP Post
@@ -61,7 +62,7 @@ const SharesUrlKey: NextPage = () => {
       urlKey: urlKey,
       formData: formData,
     });
-  }, []);
+  }, [filesMap]);
 
   if (isPosting) {
     return <LinearProgress />;
@@ -74,11 +75,16 @@ const SharesUrlKey: NextPage = () => {
       return (
         <>
           <Typography>Uploaded successfully</Typography>
-          <Typography>${data}</Typography>
+          <Typography>{data}</Typography>
         </>
       )
     }
-    console.warn("No data is returned");
+    return (
+      <>
+        <Typography>No data is returned</Typography>
+        <Typography>{data}</Typography>
+      </>
+    )
   }
 
   return (
@@ -135,16 +141,16 @@ const SharesUrlKey: NextPage = () => {
           </List>
         </div>
         <div style={{ marginLeft: "160px" }}>
-            <Button
-              variant="outlined"
-              size="medium"
-              startIcon={<FolderUploadIcon color="primary" />}
-              onClick={() => uploadFiles()}
-              disabled={filesList.length === 0}
-            >
-              Upload
-            </Button>
-          </div>
+          <Button
+            variant="outlined"
+            size="medium"
+            startIcon={<FolderUploadIcon color="primary" />}
+            onClick={() => uploadFiles()}
+            disabled={filesList.length === 0}
+          >
+            Upload
+          </Button>
+        </div>
       </Stack>
     </>
   );
