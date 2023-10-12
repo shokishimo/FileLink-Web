@@ -1,3 +1,4 @@
-export type Url = {
-  url_key: string;
+export type PresignedStruct = {
+  url: string;
+  objectKey: string;
 };
