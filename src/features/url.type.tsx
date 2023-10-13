@@ -1,4 +1,4 @@
 export type PresignedStruct = {
-  url: string;
-  objectKey: string;
+  urls: string[];
+  objectKeys: string[];
 };

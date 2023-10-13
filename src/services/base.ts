@@ -16,10 +16,11 @@ export const baseApi = api.injectEndpoints({
     // }),
 
     // post PresignedUrl generation
-    generatePresignedUrl: build.mutation<PresignedStruct, void>({
-      query: () => ({
+    generatePresignedUrl: build.mutation<PresignedStruct, { numOfFiles: number }>({
+      query: ({ numOfFiles }) => ({
         url: `generatePresignedUrl`,
         method: "POST",
+        body: { numOfFiles },
       }),
       transformResponse: (resp: PresignedStruct) => resp,
     }),

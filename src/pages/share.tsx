@@ -1,47 +1,92 @@
 import type { NextPage } from "next";
 import * as React from "react";
-import { Stack, Typography, LinearProgress } from "@mui/material";
+import { Stack, Typography, LinearProgress, Button } from "@mui/material";
+import DeleteIcon from "@mui/icons-material/Delete";
+import FolderTwoToneIcon from '@mui/icons-material/FolderTwoTone';
 import Head from "next/head";
 import { useRouter } from "next/router";
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useRef } from "react";
 import { useGeneratePresignedUrlMutation } from "@/services/base";
 import { APIErrorAlert } from "@/components/APIErrorAlert";
 import axios from "axios";
 import { PresignedStruct } from "@/features/url.type";
 
-const SharesUrlKey: NextPage = () => {
+const FileUploadPage: NextPage = () => {
   const router = useRouter();
-  const [file, setFile] = useState<File | null>(null);
+  const [isHovered, setIsHovered] = useState(false);
+  const [files, setFiles] = useState<File[]>([]);
+  const [objectKeysArr, setObjectKeysArr] = useState<string[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [generatePresignedUrl, { data, isLoading: isPosting, error, isSuccess, isError }] 
     = useGeneratePresignedUrlMutation();
 
-  const HandleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (files && files.length > 0) {
-      setFile(files[0]);
-    }
-  }, [file]);
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+      e.preventDefault();
+  }, []);
 
-  const UploadFile = useCallback((data: PresignedStruct) => {
-    const { url, objectKey } = data;
-    axios.put(url, file, {
-      headers: {
-        "Content-Type": file?.type,
-      }})
-      .then(() => {
-        alert('Successfully uploaded to S3!  Key is here: ' + objectKey);
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    if (e.dataTransfer.items) {
+      const newFiles: File[] = [];
+      // Use DataTransferItemList interface to access the file(s)
+      for (let i = 0; i < e.dataTransfer.items.length; i++) {
+        if (e.dataTransfer.items[i].kind === "file") {
+          const file = e.dataTransfer.items[i].getAsFile();
+          if (file) {
+            newFiles.push(file);
+          }
+        }
+      }
+      setFiles(prevFiles => [...prevFiles, ...newFiles]);
+    }
+  }, []);
+
+  const handleDropZoneClick = useCallback(() => {
+    fileInputRef.current?.click();
+  }, []);
+
+  const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const newFiles = Array.from(e.target.files);
+      setFiles(prevFiles => [...prevFiles, ...newFiles]);
+    }
+  }, []);
+
+  const handleDelete = useCallback((index: number) => {
+    setFiles(prevFiles => {
+        const newFiles = [...prevFiles];
+        newFiles.splice(index, 1);
+        return newFiles;
+    });
+  }, []);
+
+  const UploadFiles = useCallback(async (data: PresignedStruct) => {
+    const { urls, objectKeys } = data;
+    
+    const uploadPromises = urls.map((url, index) => {
+      return axios.put(url, files[index], {
+        headers: {
+          "Content-Type": files[index]?.type,
+        }
       })
       .catch(error => {
-        console.error('Error:', error);
-        alert('Failed to upload file. Please try again.');
+        console.error("Error: ", error);
       });
-
-    }, [file]);
+    });
+  
+    try {
+      await Promise.all(uploadPromises);
+      setObjectKeysArr((prevArr) => [...prevArr, ...objectKeys]);
+    } catch (error) {
+      console.error("Some uploads failed:", error);
+      alert("Failed to upload files. Please try again.");
+    }
+  }, [files, objectKeysArr]);
 
   const HandleSubmit = useCallback(() => {
-    if (!file) return;
-    generatePresignedUrl()
-  }, [generatePresignedUrl, file]);
+    if (files.length <= 0) return;
+    generatePresignedUrl({ numOfFiles: files.length})
+  }, [generatePresignedUrl, files]);
 
   if (isPosting) {
     return <LinearProgress />;
@@ -51,14 +96,7 @@ const SharesUrlKey: NextPage = () => {
   }
   if (isSuccess) {
     if (data) {
-      UploadFile(data)
-      // return (
-      //   <>
-      //     <Typography>data is here: </Typography>
-      //     <div>{data.url}</div>
-      //     <div>{data.objectKey}</div>
-      //   </>
-      // )
+      UploadFiles(data);
     } else {
       return (
         <Typography>data not found </Typography>
@@ -69,7 +107,7 @@ const SharesUrlKey: NextPage = () => {
   return (
     <>
       <Head>
-        <title>FileLink Shares UrlKey</title>
+        <title>FileLink Shares</title>
       </Head>
       <Stack
         direction="column" 
@@ -78,13 +116,62 @@ const SharesUrlKey: NextPage = () => {
         sx={{ minHeight: "100vh" }}
         spacing={5}
       >
+        <div 
+          onDragOver={handleDragOver} 
+          onDrop={handleDrop}
+          onClick={handleDropZoneClick}
+          style={{
+            height: "200px",
+            width: "400px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            cursor: "pointer",
+            borderRadius: "10px",
+            backgroundColor: "#93b0b3",
+            boxShadow: "0px 3px 1px -2px rgba(0,0,0,0.2)",
+          }}
+        >
+          <Typography sx={{ color: "#264d5b" }}>Drop files here or click to upload</Typography>
+          <input 
+            ref={fileInputRef}
+            type="file" 
+            multiple 
+            onChange={handleFileChange} 
+            style={{ display: "none" }} // Hide the actual input
+          />
+        </div>
+
+        <ul style={{ listStyleType: "none", paddingLeft: "0px" }}>
+          {files.map((file, index) => (
+            <li key={index} style={{ display: "inline-block", marginRight: "20px", color: "#264d5b" }}>
+              <FolderTwoToneIcon sx={{ fontSize: "30px", verticalAlign: "middle" }} />
+              <Typography sx={{ color: "#264d5b", display: "inline-block", marginLeft: "10px" }}>{file.name}</Typography> 
+              <DeleteIcon sx={{ fontSize: "30px", verticalAlign: "middle", marginLeft: "10px", ":hover": { cursor: "pointer" } }} onClick={() => handleDelete(index)} />
+            </li>
+          ))}
+        </ul>
+
         <div>
-          <input type="file" onChange={HandleFileChange} />
-          <input type="button" value="Upload" onClick={HandleSubmit} disabled={!file} />
+          <input type="button" 
+            value="Upload" 
+            onClick={HandleSubmit} 
+            hidden={files.length <= 0}
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
+            style={{
+              padding: "10px 15px",
+              backgroundColor: isHovered? "#264d5b" : "#93b0b3",
+              color:  isHovered? "#e4ecf4" :"#264d5b",
+              borderRadius: "7px",
+              fontSize: "16px",
+              marginLeft: "300px",
+            }}
+          />
         </div>
       </Stack>
     </>
   );
 };
 
-export default SharesUrlKey;
+export default FileUploadPage;

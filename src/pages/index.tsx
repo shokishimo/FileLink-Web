@@ -21,7 +21,7 @@ const Home: NextPage = () => {
       >
         <Typography variant="h3">FileLink</Typography>
         <Link href={`/share`}>
-          <Button size="large" variant="contained">Start</Button>
+          <Button size="large" variant="contained" sx={{ backgroundColor: "#406671", ":hover": { backgroundColor: "#264d5b" } }}>Start</Button>
         </Link>
       </Stack>
     </>
