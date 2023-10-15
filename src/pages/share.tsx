@@ -1,24 +1,24 @@
-import type { NextPage } from "next";
+import Link from "next/link";
 import * as React from "react";
-import { Stack, Typography, LinearProgress, Button } from "@mui/material";
+import { Stack, Typography, Button, CircularProgress } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
-import FolderTwoToneIcon from '@mui/icons-material/FolderTwoTone';
+import FolderTwoToneIcon from "@mui/icons-material/FolderTwoTone";
 import Head from "next/head";
-import { useRouter } from "next/router";
 import { useState, useCallback, useRef } from "react";
-import { useGeneratePresignedUrlMutation } from "@/services/base";
+import { usePostPresignedUrlsMutation } from "@/services/base";
 import { APIErrorAlert } from "@/components/APIErrorAlert";
 import axios from "axios";
-import { PresignedStruct } from "@/features/url.type";
+import { PostPresignedRes } from "@/features/postPresignedReq.type";
 
-const FileUploadPage: NextPage = () => {
-  const router = useRouter();
+const FileUploadPage: React.FC<void> = () => {
   const [isHovered, setIsHovered] = useState(false);
   const [files, setFiles] = useState<File[]>([]);
+  const [filenames, setFilenames] = useState<string[]>([]);
   const [objectKeysArr, setObjectKeysArr] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [generatePresignedUrl, { data, isLoading: isPosting, error, isSuccess, isError }] 
-    = useGeneratePresignedUrlMutation();
+  const [isPostCompleted, setIsPostCompleted] = useState(false);
+  const [postPresignedUrls, { data: postData, isLoading: isPostLoading, error: postError, isSuccess: isPostSuccess, isError: isPostError }] 
+    = usePostPresignedUrlsMutation();
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
       e.preventDefault();
@@ -60,9 +60,8 @@ const FileUploadPage: NextPage = () => {
     });
   }, []);
 
-  const UploadFiles = useCallback(async (data: PresignedStruct) => {
+  const UploadFiles = useCallback(async (data: PostPresignedRes) => {
     const { urls, objectKeys } = data;
-    
     const uploadPromises = urls.map((url, index) => {
       return axios.put(url, files[index], {
         headers: {
@@ -73,42 +72,47 @@ const FileUploadPage: NextPage = () => {
         console.error("Error: ", error);
       });
     });
-  
+
     try {
       await Promise.all(uploadPromises);
       setObjectKeysArr((prevArr) => [...prevArr, ...objectKeys]);
+      setIsPostCompleted(true);
     } catch (error) {
       console.error("Some uploads failed:", error);
       alert("Failed to upload files. Please try again.");
+    } finally {
+      const tempFilenames = files.map(file => file.name);
+      setFilenames(tempFilenames);
     }
-  }, [files, objectKeysArr]);
+  }, [files]);
 
   const HandleSubmit = useCallback(() => {
     if (files.length <= 0) return;
-    generatePresignedUrl({ numOfFiles: files.length})
-  }, [generatePresignedUrl, files]);
+    postPresignedUrls({ numOfFiles: files.length })
+  }, [postPresignedUrls, files]);
 
-  if (isPosting) {
-    return <LinearProgress />;
+  const showLoading = useCallback(() => {
+    if (isPostLoading) return true;
+    if (isPostSuccess && postData) return true;
+    if (isPostSuccess && !isPostCompleted) return true;
+    return false;
+  }, [isPostLoading, postData, isPostSuccess, isPostCompleted]);
+
+  if (isPostError) {
+    return <APIErrorAlert error={postError} />;
   }
-  if (isError) {
-    return <APIErrorAlert error={error} />;
+  if (isPostSuccess && !postData) {
+    return <Typography>data not found </Typography>;
   }
-  if (isSuccess) {
-    if (data) {
-      UploadFiles(data);
-    } else {
-      return (
-        <Typography>data not found </Typography>
-      )
-    }
+  if (isPostSuccess && postData) {
+    UploadFiles(postData);
   }
 
   return (
     <>
       <Head>
         <title>FileLink Shares</title>
-      </Head>
+      </Head> 
       <Stack
         direction="column" 
         alignItems="center" 
@@ -116,59 +120,77 @@ const FileUploadPage: NextPage = () => {
         sx={{ minHeight: "100vh" }}
         spacing={5}
       >
-        <div 
-          onDragOver={handleDragOver} 
-          onDrop={handleDrop}
-          onClick={handleDropZoneClick}
-          style={{
-            height: "200px",
-            width: "400px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            cursor: "pointer",
-            borderRadius: "10px",
-            backgroundColor: "#93b0b3",
-            boxShadow: "0px 3px 1px -2px rgba(0,0,0,0.2)",
-          }}
-        >
-          <Typography sx={{ color: "#264d5b" }}>Drop files here or click to upload</Typography>
-          <input 
-            ref={fileInputRef}
-            type="file" 
-            multiple 
-            onChange={handleFileChange} 
-            style={{ display: "none" }} // Hide the actual input
-          />
-        </div>
+        {!isPostCompleted && (
+          <>
+            <div 
+              onDragOver={handleDragOver} 
+              onDrop={handleDrop}
+              onClick={handleDropZoneClick}
+              style={{
+                height: "200px",
+                width: "400px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                cursor: "pointer",
+                borderRadius: "10px",
+                backgroundColor: "#93b0b3",
+                boxShadow: "0px 3px 1px -2px rgba(0,0,0,0.2)",
+              }}
+            >
+              <Typography sx={{ color: "#264d5b" }}>Drop files here or click to upload</Typography>
+              <input 
+                ref={fileInputRef}
+                type="file" 
+                multiple 
+                onChange={handleFileChange} 
+                style={{ display: "none" }} // Hide the actual input
+              />
+              {showLoading() && (
+                <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)" }}>
+                  <CircularProgress />
+                </div>
+              )}
+            </div>
 
-        <ul style={{ listStyleType: "none", paddingLeft: "0px" }}>
-          {files.map((file, index) => (
-            <li key={index} style={{ display: "inline-block", marginRight: "20px", color: "#264d5b" }}>
-              <FolderTwoToneIcon sx={{ fontSize: "30px", verticalAlign: "middle" }} />
-              <Typography sx={{ color: "#264d5b", display: "inline-block", marginLeft: "10px" }}>{file.name}</Typography> 
-              <DeleteIcon sx={{ fontSize: "30px", verticalAlign: "middle", marginLeft: "10px", ":hover": { cursor: "pointer" } }} onClick={() => handleDelete(index)} />
-            </li>
-          ))}
-        </ul>
+            <ul style={{ listStyleType: "none", paddingLeft: "0px" }}>
+              {files.map((file, index) => (
+                <li key={index} style={{ display: "inline-block", marginRight: "20px", color: "#264d5b" }}>
+                  <FolderTwoToneIcon sx={{ fontSize: "30px", verticalAlign: "middle" }} />
+                  <Typography sx={{ color: "#264d5b", display: "inline-block", marginLeft: "10px" }}>{file.name}</Typography> 
+                  <DeleteIcon sx={{ fontSize: "30px", verticalAlign: "middle", marginLeft: "10px", ":hover": { cursor: "pointer" } }} onClick={() => handleDelete(index)} />
+                </li>
+              ))}
+            </ul>
 
-        <div>
-          <input type="button" 
-            value="Upload" 
-            onClick={HandleSubmit} 
-            hidden={files.length <= 0}
-            onMouseEnter={() => setIsHovered(true)}
-            onMouseLeave={() => setIsHovered(false)}
-            style={{
-              padding: "10px 15px",
-              backgroundColor: isHovered? "#264d5b" : "#93b0b3",
-              color:  isHovered? "#e4ecf4" :"#264d5b",
-              borderRadius: "7px",
-              fontSize: "16px",
-              marginLeft: "300px",
-            }}
-          />
-        </div>
+            <div>
+              <input type="button" 
+                value="Upload" 
+                onClick={HandleSubmit} 
+                hidden={files.length <= 0}
+                onMouseEnter={() => setIsHovered(true)}
+                onMouseLeave={() => setIsHovered(false)}
+                style={{
+                  padding: "10px 15px",
+                  backgroundColor: isHovered? "#264d5b" : "#93b0b3",
+                  color:  isHovered? "#e4ecf4" :"#264d5b",
+                  borderRadius: "7px",
+                  fontSize: "16px",
+                  marginLeft: "300px",
+                }}
+              />
+            </div>
+          </>
+        )}
+
+        {isPostCompleted && (
+          <>
+            <Typography variant="h4">Files have been uploaded! Click the button below to download</Typography>
+            <Link href={{ pathname: '/download', query: { keys: objectKeysArr, filenames: filenames }}}>
+              <Button size="large" variant="contained" sx={{ backgroundColor: "#406671", ":hover": { backgroundColor: "#264d5b" } }}>Go download</Button>
+            </Link>
+          </>
+        )}
       </Stack>
     </>
   );

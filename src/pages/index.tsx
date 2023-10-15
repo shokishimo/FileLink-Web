@@ -1,11 +1,10 @@
 import type { NextPage } from "next";
 import * as React from "react";
 import { Stack, Typography, Button, LinearProgress } from "@mui/material";
-import { APIErrorAlert } from "../components/APIErrorAlert";
 import Head from "next/head";
 import Link from "next/link";
 
-const Home: NextPage = () => {
+const Home: React.FC<void> = () => {
 
   return (
     <>

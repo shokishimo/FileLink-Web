@@ -1,5 +1,6 @@
 import { api } from "./api";
-import { PresignedStruct } from "../features/url.type";
+import { PostPresignedRes } from "../features/postPresignedReq.type";
+import { GetPresignedRes } from "../features/getPresignedReq.type";
 
 export const baseApi = api.injectEndpoints({
   endpoints: (build) => ({
@@ -14,25 +15,35 @@ export const baseApi = api.injectEndpoints({
     //   query: ({ objectKey }) => `download/${objectKey}`,
     //   transformResponse: (resp: any) => resp,
     // }),
+    getPresignedUrls: build.mutation<GetPresignedRes, { keys: string[] }>({
+      query: ({ keys }) => ({
+        url: `getPresignedUrls`,
+        method: "POST",
+        body: { keys },
+      }),
+      transformResponse: (resp: GetPresignedRes) => resp,
+    }),
 
     // post PresignedUrl generation
-    generatePresignedUrl: build.mutation<PresignedStruct, { numOfFiles: number }>({
+    postPresignedUrls: build.mutation<PostPresignedRes, { numOfFiles: number }>({
       query: ({ numOfFiles }) => ({
-        url: `generatePresignedUrl`,
+        url: `postPresignedUrls`,
         method: "POST",
         body: { numOfFiles },
       }),
-      transformResponse: (resp: PresignedStruct) => resp,
+      transformResponse: (resp: PostPresignedRes) => resp,
     }),
   }),
 });
 
 export const {
-  useGeneratePresignedUrlMutation,
+  usePostPresignedUrlsMutation,
+  useGetPresignedUrlsMutation,
 } = baseApi;
 
 export const {
   endpoints: { 
-    generatePresignedUrl,
+    postPresignedUrls,
+    getPresignedUrls,
   },
 } = baseApi;

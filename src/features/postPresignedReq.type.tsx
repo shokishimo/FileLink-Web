@@ -1,4 +1,4 @@
-export type PresignedStruct = {
+export type PostPresignedRes = {
   urls: string[];
   objectKeys: string[];
 };
