@@ -29,6 +29,7 @@
     "@types/uuid": "^9.0.4",
     "eslint": "latest",
     "eslint-config-next": "latest",
+    "madge": "^6.1.0",
     "typescript": "latest"
   }
 }
