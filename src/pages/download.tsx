@@ -49,7 +49,7 @@ const DownloadPage: React.FC<void> = () => {
         spacing={5}
       >
         <Typography sx={{ color: "#264d5b" }}>Here are the urls of your files uploaded</Typography>
-        <Typography sx={{ color: "#264d5b" }}>The urls are available for 1 hour</Typography>
+        <Typography sx={{ color: "#264d5b" }}>The urls are available for 24 hours</Typography>
         <ul>
           {urls.map((url, index) => (
             <li key={filenames[index]}>
