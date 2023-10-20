@@ -4,21 +4,23 @@ import { Stack, Typography, Button, CircularProgress } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import FolderTwoToneIcon from "@mui/icons-material/FolderTwoTone";
 import Head from "next/head";
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useMemo } from "react";
 import { usePostPresignedUrlsMutation } from "@/services/base";
 import { APIErrorAlert } from "@/components/APIErrorAlert";
 import axios from "axios";
 import { PostPresignedRes } from "@/features/postPresignedReq.type";
+import { useRouter } from "next/router";
 
 const FileUploadPage: React.FC<void> = () => {
+  const router = useRouter();
   const [isHovered, setIsHovered] = useState(false);
   const [files, setFiles] = useState<File[]>([]);
-  const [filenames, setFilenames] = useState<string[]>([]);
   const [objectKeysArr, setObjectKeysArr] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isPostCompleted, setIsPostCompleted] = useState(false);
   const [postPresignedUrls, { data: postData, isLoading: isPostLoading, error: postError, isSuccess: isPostSuccess, isError: isPostError }] 
     = usePostPresignedUrlsMutation();
+  const filenames = useMemo(() => files.map(file => file.name), [files]);
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
       e.preventDefault();
@@ -60,6 +62,7 @@ const FileUploadPage: React.FC<void> = () => {
     });
   }, []);
 
+
   const UploadFiles = useCallback(async (data: PostPresignedRes) => {
     const { urls, objectKeys } = data;
     const uploadPromises = urls.map((url, index) => {
@@ -80,16 +83,13 @@ const FileUploadPage: React.FC<void> = () => {
     } catch (error) {
       console.error("Some uploads failed:", error);
       alert("Failed to upload files. Please try again.");
-    } finally {
-      const tempFilenames = files.map(file => file.name);
-      setFilenames(tempFilenames);
     }
   }, [files]);
 
   const HandleSubmit = useCallback(() => {
-    if (files.length <= 0) return;
+    if (files.length <= 0 || filenames.length <= 0 || files.length != filenames.length) return;
     postPresignedUrls({ numOfFiles: files.length })
-  }, [postPresignedUrls, files]);
+  }, [files, filenames, postPresignedUrls]);
 
   const showLoading = useCallback(() => {
     if (isPostLoading) return true;
@@ -97,6 +97,14 @@ const FileUploadPage: React.FC<void> = () => {
     if (isPostSuccess && !isPostCompleted) return true;
     return false;
   }, [isPostLoading, postData, isPostSuccess, isPostCompleted]);
+
+  if (isPostCompleted) {
+    router.push({
+      pathname: "/download",
+      query: { keys: objectKeysArr, filenames: filenames },
+    });
+    return null;
+  }
 
   if (isPostError) {
     return <APIErrorAlert error={postError} />;
@@ -180,15 +188,6 @@ const FileUploadPage: React.FC<void> = () => {
                 }}
               />
             </div>
-          </>
-        )}
-
-        {isPostCompleted && (
-          <>
-            <Typography variant="h4">Files have been uploaded! Click the button below to download</Typography>
-            <Link href={{ pathname: '/download', query: { keys: objectKeysArr, filenames: filenames }}}>
-              <Button size="large" variant="contained" sx={{ backgroundColor: "#406671", ":hover": { backgroundColor: "#264d5b" } }}>Go download</Button>
-            </Link>
           </>
         )}
       </Stack>
