@@ -4,7 +4,7 @@ import { Stack, Typography, Button, CircularProgress } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import FolderTwoToneIcon from "@mui/icons-material/FolderTwoTone";
 import Head from "next/head";
-import { useState, useCallback, useRef, useMemo } from "react";
+import { useState, useCallback, useRef, useMemo, useEffect } from "react";
 import { usePostPresignedUrlsMutation } from "@/services/base";
 import { APIErrorAlert } from "@/components/APIErrorAlert";
 import axios from "axios";
@@ -98,13 +98,18 @@ const FileUploadPage: React.FC<void> = () => {
     return false;
   }, [isPostLoading, postData, isPostSuccess, isPostCompleted]);
 
-  if (isPostCompleted) {
-    router.push({
-      pathname: "/download",
-      query: { keys: objectKeysArr, filenames: filenames },
-    });
-    return null;
-  }
+  useEffect(() => {
+    if (isPostCompleted) {
+      setIsPostCompleted(false);
+      router.push({
+        pathname: "/download",
+        query: { 
+          keys: objectKeysArr, 
+          filenames: filenames,
+        },
+      });
+    }
+  }, [filenames, isPostCompleted, objectKeysArr, router]);
 
   if (isPostError) {
     return <APIErrorAlert error={postError} />;
