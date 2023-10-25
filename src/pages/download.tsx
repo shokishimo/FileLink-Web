@@ -16,7 +16,7 @@ const DownloadPage: React.FC<void> = () => {
 
   useEffect(() => {
     getPresignedUrls({ keys });
-  }, []);
+  }, [getPresignedUrls, keys]);
   
   if (isGetLoading) {
     return <LinearProgress />
