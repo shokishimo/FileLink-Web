@@ -15,44 +15,55 @@ const FileUploadPage: React.FC<void> = () => {
   const router = useRouter();
   const [isHovered, setIsHovered] = useState(false);
   const [files, setFiles] = useState<File[]>([]);
-  const [objectKeysArr, setObjectKeysArr] = useState<string[]>([]);
+  const [filenames, setFilenames] = useState<string[]>([]);
+  const [objKeys, setObjKeys] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isPostCompleted, setIsPostCompleted] = useState(false);
   const [postPresignedUrls, { data: postData, isLoading: isPostLoading, error: postError, isSuccess: isPostSuccess, isError: isPostError }] 
     = usePostPresignedUrlsMutation();
-  const filenames = useMemo(() => files.map(file => file.name), [files]);
 
-  const handleDragOver = useCallback((e: React.DragEvent) => {
-      e.preventDefault();
-  }, []);
-
-  const handleDrop = useCallback((e: React.DragEvent) => {
+  const HandleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
+    const newFiles: File[] = [];
+    const newFilenames: string[] = [];
+    const processFile = (file: File) => {
+      newFiles.push(file);
+      newFilenames.push(file.name);
+    };
+
     if (e.dataTransfer.items) {
-      const newFiles: File[] = [];
-      // Use DataTransferItemList interface to access the file(s)
-      for (let i = 0; i < e.dataTransfer.items.length; i++) {
-        if (e.dataTransfer.items[i].kind === "file") {
-          const file = e.dataTransfer.items[i].getAsFile();
-          if (file) {
-            newFiles.push(file);
+      [...e.dataTransfer.items].forEach(item => {
+        if (item.kind === "file") {
+          const entry = item.webkitGetAsEntry();
+          if (entry) {
+            if (entry.isFile) {
+              const f = item.getAsFile()
+              if (f) processFile(f);
+            } else if (entry.isDirectory) {
+              alert("Directory/folder is not supported. \nCreate a zip file instead");
+            }
           }
         }
-      }
-      setFiles(prevFiles => [...prevFiles, ...newFiles]);
+      });
+    } else {
+      // for older browsers
+      [...e.dataTransfer.files].forEach(eachFile => {
+        processFile(eachFile);
+      });
     }
-  }, []);
 
-  const handleDropZoneClick = useCallback(() => {
-    fileInputRef.current?.click();
-  }, []);
+    setFiles(prevFiles => [...prevFiles, ...newFiles]);
+    setFilenames(prevFilenames => [...prevFilenames, ...newFilenames]);
+  }, [setFiles, setFilenames]);
 
   const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       const newFiles = Array.from(e.target.files);
       setFiles(prevFiles => [...prevFiles, ...newFiles]);
+      const newFilenames = Array.from(e.target.files).map(file => file.name);
+      setFilenames(prevFilenames => [...prevFilenames, ...newFilenames]);
     }
-  }, []);
+  }, [setFiles, setFilenames]);
 
   const handleDelete = useCallback((index: number) => {
     setFiles(prevFiles => {
@@ -60,11 +71,17 @@ const FileUploadPage: React.FC<void> = () => {
         newFiles.splice(index, 1);
         return newFiles;
     });
-  }, []);
-
+    setFilenames(prevFilenames => {
+      const newFilenames = [...prevFilenames];
+      newFilenames.splice(index, 1);
+      return newFilenames;
+    });
+  }, [setFiles, setFilenames]);
 
   const UploadFiles = useCallback(async (data: PostPresignedRes) => {
     const { urls, objectKeys } = data;
+    setObjKeys(objectKeys);
+
     const uploadPromises = urls.map((url, index) => {
       return axios.put(url, files[index], {
         headers: {
@@ -78,7 +95,6 @@ const FileUploadPage: React.FC<void> = () => {
 
     try {
       await Promise.all(uploadPromises);
-      setObjectKeysArr((prevArr) => [...prevArr, ...objectKeys]);
       setIsPostCompleted(true);
     } catch (error) {
       console.error("Some uploads failed:", error);
@@ -87,7 +103,7 @@ const FileUploadPage: React.FC<void> = () => {
   }, [files]);
 
   const HandleSubmit = useCallback(() => {
-    if (files.length <= 0 || filenames.length <= 0 || files.length != filenames.length) return;
+    if (files.length <= 0 || filenames.length <= 0 || files.length !== filenames.length) return;
     postPresignedUrls({ numOfFiles: files.length })
   }, [files, filenames, postPresignedUrls]);
 
@@ -104,21 +120,24 @@ const FileUploadPage: React.FC<void> = () => {
       router.push({
         pathname: "/download",
         query: { 
-          keys: objectKeysArr, 
+          keys: objKeys, 
           filenames: filenames,
         },
       });
     }
-  }, [filenames, isPostCompleted, objectKeysArr, router]);
+  }, [filenames, isPostCompleted, objKeys, router]);
+
+  useEffect(() => {
+    if (isPostSuccess && postData) {
+      UploadFiles(postData);
+    }
+  }, [isPostSuccess, postData, UploadFiles]);
 
   if (isPostError) {
     return <APIErrorAlert error={postError} />;
   }
   if (isPostSuccess && !postData) {
     return <Typography>data not found </Typography>;
-  }
-  if (isPostSuccess && postData) {
-    UploadFiles(postData);
   }
 
   return (
@@ -136,9 +155,9 @@ const FileUploadPage: React.FC<void> = () => {
         {!isPostCompleted && (
           <>
             <div 
-              onDragOver={handleDragOver} 
-              onDrop={handleDrop}
-              onClick={handleDropZoneClick}
+              onDragOver={(e) => e.preventDefault()} 
+              onDrop={HandleDrop}
+              onClick={() => fileInputRef.current?.click()}
               style={{
                 height: "200px",
                 width: "400px",
