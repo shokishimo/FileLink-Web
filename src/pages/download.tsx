@@ -1,7 +1,7 @@
 import * as React from "react";
 import { Stack, Typography, LinearProgress } from "@mui/material";
 import Head from "next/head";
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState } from "react";
 import { useGetPresignedUrlsMutation } from "@/services/base";
 import { useRouter } from "next/router";
 import { APIErrorAlert } from "@/components/APIErrorAlert";
@@ -15,8 +15,11 @@ const DownloadPage: React.FC<void> = () => {
   const [urls, setUrls] = useState<string[]>([]);
 
   useEffect(() => {
-    getPresignedUrls({ keys });
-  }, []);
+    if (!keys) return;
+    // Ensure keys is always an array, even if there's only one key
+    const keysArray = Array.isArray(keys) ? keys : [keys];
+    getPresignedUrls({ keys: keysArray });
+  }, [getPresignedUrls, keys]);
   
   if (isGetLoading) {
     return <LinearProgress />

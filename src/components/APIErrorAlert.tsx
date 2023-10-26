@@ -39,7 +39,7 @@ const APIErrorAlert: React.FC<Props> = (props) => {
   }, [error]);
 
   return (
-    <Stack sx={(theme) => ({ margin: theme.spacing(2) })} spacing={2}>
+    <Stack sx={(theme) => ({ margin: theme.spacing(3) })} spacing={2}>
       <Alert severity="error">
         {myMessage}
         {errorString ? ` (${errorString})` : ""}
