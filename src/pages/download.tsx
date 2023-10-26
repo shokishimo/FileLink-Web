@@ -15,7 +15,10 @@ const DownloadPage: React.FC<void> = () => {
   const [urls, setUrls] = useState<string[]>([]);
 
   useEffect(() => {
-    getPresignedUrls({ keys });
+    if (!keys) return;
+    // Ensure keys is always an array, even if there's only one key
+    const keysArray = Array.isArray(keys) ? keys : [keys];
+    getPresignedUrls({ keys: keysArray });
   }, [getPresignedUrls, keys]);
   
   if (isGetLoading) {

@@ -19,7 +19,7 @@ export const baseApi = api.injectEndpoints({
       query: ({ keys }) => ({
         url: `getPresignedUrls`,
         method: "POST",
-        body: { keys: keys },
+        body: { keys },
       }),
       transformResponse: (resp: GetPresignedRes) => resp,
     }),
@@ -29,7 +29,7 @@ export const baseApi = api.injectEndpoints({
       query: ({ numOfFiles }) => ({
         url: `postPresignedUrls`,
         method: "POST",
-        body: { numOfFiles: numOfFiles },
+        body: { numOfFiles },
       }),
       transformResponse: (resp: PostPresignedRes) => resp,
     }),
