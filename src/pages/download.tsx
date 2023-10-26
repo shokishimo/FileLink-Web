@@ -1,7 +1,7 @@
 import * as React from "react";
 import { Stack, Typography, LinearProgress } from "@mui/material";
 import Head from "next/head";
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState } from "react";
 import { useGetPresignedUrlsMutation } from "@/services/base";
 import { useRouter } from "next/router";
 import { APIErrorAlert } from "@/components/APIErrorAlert";
