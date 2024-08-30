@@ -11,3 +11,7 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 
 ## Auto Deployment on Amplify
 Try this application [HERE](https://www.filelink.cloud/)
+
+## Architecture
+<img width="500" alt="スクリーンショット 2024-08-30 12 34 54" src="https://github.com/user-attachments/assets/1464d733-4322-4b46-9855-4bfd19c7745d">
+
